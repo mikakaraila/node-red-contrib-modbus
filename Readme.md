@@ -17,17 +17,18 @@ Run the following command for global install
 
 # How to use
 
-![Flow Example](images/ScreenshotV042.png)
+![Flow Example](images/Screenshot01V042.png)
+
+![Flow Example](images/Screenshot02V042.png)
 
 # Author
 
-since 2015 [Mika Karaila][4]
-
-since 2016 [Klaus Landsdorf][5]
+* since 2015 [Mika Karaila][4]
+* since 2016 [Klaus Landsdorf][5]
 
 # Co-Author disconnected branch
 
-since 2016 [Jason D. Harper][3]
+* since 2016 [Jason D. Harper][3]
 
 
 [1]:http://nodered.org
