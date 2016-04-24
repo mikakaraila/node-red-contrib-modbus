@@ -17,6 +17,8 @@ Run the following command for global install
 
 # How to use
 
+![Flow Example](images/ScreenshotV042.png)
+
 # Author
 since 2015 [Mika Karaila][4]
 since 2016 [Klaus Landsdorf][5]

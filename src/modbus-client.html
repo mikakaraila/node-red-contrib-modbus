@@ -54,7 +54,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 
 
 <script type="text/javascript">
-    RED.nodes.registerType('modbus-server', {
+    RED.nodes.registerType('modbus-client', {
         category: 'config',
         defaults: {
             host: {value: "127.0.0.1", required: true},
@@ -68,7 +68,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 </script>
 
 
-<script type="text/x-red" data-template-name="modbus-server">
+<script type="text/x-red" data-template-name="modbus-client">
     <div class="form-row">
         <label for="node-config-input-host"><i class="icon-bookmark"></i> Host</label>
         <input type="text" id="node-config-input-host">
@@ -85,7 +85,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 </script>
 
 
-<script type="text/x-red" data-help-name="modbus-server">
-    <p>Uses MODBUS TCP to read/write ethernet host:port and register/coil addresses.</p>
+<script type="text/x-red" data-help-name="modbus-client">
+    <p>Uses MODBUS TCP client to read/write ethernet host:port and register/coil addresses.</p>
 
 </script>

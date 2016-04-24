@@ -56,55 +56,55 @@ module.exports = function (RED) {
     var modbus = require('jsmodbus');
     var util = require('util');
 
-    function ModbusServerNode(config) {
+    function ModbusClientNode(config) {
 
         RED.nodes.createNode(this, config);
 
         this.host = config.host;
         this.port = config.port;
         this.unit_id = config.unit_id;
-        this.modbusconn = null;
 
         var node = this;
 
+        node.client = null;
         var serverInfo = ' at ' + node.host + ':' + node.port + ' unit_id: ' + node.unit_id;
         var connections = 0;
 
         function verbose_warn(logMessage) {
             if (RED.settings.verbose) {
-                node.warn('Server -> ' + logMessage + ' at ' + serverInfo);
+                node.warn('Client -> ' + logMessage + ' at ' + serverInfo);
             }
         }
 
         function verbose_log(logMessage) {
             if (RED.settings.verbose) {
-                node.log('Server -> ' + logMessage + ' at ' + serverInfo);
+                node.log('Client -> ' + logMessage + ' at ' + serverInfo);
             }
         }
 
         node.initializeModbusTCPConnection = function (handler) {
 
-            if (node.modbusconn) {
-                verbose_log('Connected to modbus slave');
-                handler(node.modbusconn);
+            if (node.client) {
+                verbose_log(connections + ' Connections connected to modbus slave');
+                handler(node.client);
             }
             else {
                 verbose_log('Connecting to modbus slave');
 
-                node.modbusconn = null;
+                node.client = null;
                 try {
-                    node.modbusconn = modbus.createTCPClient(config.port, config.host, Number(config.unit_id),
-                        function (err) {
-                            if (err) {
-                                node.error('Modbus connection: ' + util.inspect(err, false, null));
-                                handler(null, err);
-                            } else {
-                                connections++;
-                                verbose_warn("Server connected " + connections);
-                            }
-                        });
+                    node.client = modbus.client.tcp.complete({
+                        'host': config.host,
+                        'port': config.port,
+                        'autoReconnect': true,
+                        'timeout': 5000,
+                        'unitId': Number(config.unit_id)
+                    });
 
-                    handler(node.modbusconn);
+                    node.client.connect();
+                    connections++;
+
+                    handler(node.client);
                 }
                 catch (err) {
                     handler(null, err);
@@ -113,20 +113,20 @@ module.exports = function (RED) {
         };
 
         node.on("close", function () {
-            verbose_warn("Server close");
+            verbose_warn("Client close");
             verbose_log('disconnecting from modbus slave');
 
-            if (node.modbusconn && node.modbusconn.isConnected()) {
-                node.modbusconn.close();
-                node.modbusconn = null;
-                verbose_warn("Server closed " + connections--);
+            if (node.client) {
+                node.client.close();
+                node.client = null;
+                verbose_warn("Client closed " + connections--);
             }
             else {
-                node.modbusconn = null;
-                verbose_warn("Server closed");
+                node.client = null;
+                verbose_warn("Client closed");
             }
         });
     }
 
-    RED.nodes.registerType("modbus-server", ModbusServerNode);
+    RED.nodes.registerType("modbus-client", ModbusClientNode);
 };

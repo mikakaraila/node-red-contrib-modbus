@@ -90,6 +90,13 @@ module.exports = function (RED) {
             }
         };
 
+        node.receiveEventErrorWrite = function (err) {
+            if (node) {
+                set_node_status_to("error");
+                node.error(err);
+            }
+        };
+
         function check_connection() {
             if (node) {
                 if (!node.connection) {
@@ -141,6 +148,7 @@ module.exports = function (RED) {
                         if (node.connection) {
 
                             node.connection.on('close', node.receiveEventCloseWrite);
+                            node.connection.on('error', node.receiveEventErrorWrite);
                             node.connection.on('connect', node.receiveEventConnectWrite);
                             callback();
 
@@ -161,7 +169,7 @@ module.exports = function (RED) {
                 function (err) {
                     if (err) {
                         node.connection = null;
-                        callback(err);
+                        node.error(err);
                     }
                 }
             );
@@ -181,59 +189,47 @@ module.exports = function (RED) {
 
                 node.status(null);
 
-                if (!node.connection || !node.connection.isConnected()) {
+            if (!node.connection) {
                     set_node_status_to("waiting");
                     return;
                 }
 
                 switch (node.dataType) {
-                    case "Coil": //FC: 5
+                    case "MCoils": //FC: 15
+                        verbose_log('write payload length: ' + msg.payload.length);
 
-                        if (msg.payload.length < node.quantity) {
-                            node.error("Quantity should be less or equal to coil payload array Addr: ".join(node.adr, " Q: ", node.quantity));
-                        }
-                        if (node.quantity > 1) {
-                            for (i = node.adr; i < node.quantity; i++) {
-
-                                node.connection.writeSingleCoil(i, msg.payload[i], function (resp, err) {
-                                    if (set_modbus_error(err) && resp) {
-                                        set_node_status_to("active writing");
-                                        node.send(build_message(msg.payload[i], resp));
-                                    }
-                                });
-                            }
+                        if (msg.payload.length !== Number(node.quantity)) {
+                            node.error("Quantity should be less or equal to coil payload array Addr: " + node.adr + " Q: " + node.quantity);
                         } else {
-                            node.connection.writeSingleCoil(node.adr, msg.payload, function (resp, err) {
-                                if (set_modbus_error(err) && resp) {
-                                    set_node_status_to("active writing");
-                                    node.send(build_message(msg.payload, resp));
-                                }
-                            });
+                            node.connection.writeMultipleCoils(Number(node.adr), msg.payload).then(function (resp) {
+                                set_node_status_to("active writing");
+                                node.send(build_message(msg.payload, resp));
+                            }).fail(set_modbus_error);
                         }
                         break;
+                    case "Coil": //FC: 5
+                        node.connection.writeSingleCoil(Number(node.adr), (msg.payload == true)).then(function (resp) {
+                            set_node_status_to("active writing");
+                            node.send(build_message(msg.payload, resp));
+                        }).fail(set_modbus_error);
+                        break;
+                    case "MHoldingRegisters": //FC: 16
+                        verbose_log('write payload length: ' + msg.payload.length);
 
-                    case "HoldingRegister": //FC: 6
-
-                        if (msg.payload.length < node.quantity) {
-                            node.error("Quantity should be less or equal to register payload array Addr: ".join(node.adr, " Q: ", node.quantity));
-                        }
-                        if (node.quantity > 1) {
-                            for (i = node.adr; i < node.quantity; i++) {
-                                node.connection.writeSingleRegister(i, Number(msg.payload[i]), function (resp, err) {
-                                    if (set_modbus_error(err) && resp) {
-                                        set_node_status_to("active writing");
-                                        node.send(build_message(msg.payload[i], resp));
-                                    }
-                                });
-                            }
+                        if (msg.payload.length !== Number(node.quantity)) {
+                            node.error("Quantity should be less or equal to register payload array Addr: " + node.adr + " Q: " + node.quantity);
                         } else {
-                            node.connection.writeSingleRegister(node.adr, Number(msg.payload), function (resp, err) {
-                                if (set_modbus_error(err) && resp) {
-                                    set_node_status_to("active writing");
-                                    node.send(build_message(Number(msg.payload), resp));
-                                }
-                            });
+                            node.connection.writeMultipleRegisters(Number(node.adr), msg.payload).then(function (resp) {
+                                set_node_status_to("active writing");
+                                node.send(build_message(msg.payload, resp));
+                            }).fail(set_modbus_error);
                         }
+                        break;
+                    case "HoldingRegister": //FC: 6
+                        node.connection.writeSingleRegister(Number(node.adr), Number(msg.payload)).then(function (resp) {
+                            set_node_status_to("active writing");
+                            node.send(build_message(Number(msg.payload), resp));
+                        }).fail(set_modbus_error);
                         break;
 
                     default:
@@ -248,6 +244,7 @@ module.exports = function (RED) {
             set_node_status_to("closed");
             node.receiveEventCloseWrite = null;
             node.receiveEventConnectWrite = null;
+            node.receiveEventErrorWrite = null;
             node.connection = null;
             node = null;
         });

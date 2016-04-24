@@ -61,7 +61,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
             dataType: {value: "", required: true},
             adr: {value: "", required: true, validate: RED.validators.number()},
             quantity: {value: "", required: true, validate: RED.validators.number()},
-            server: {value: "", type: "modbus-server"}
+            server: {value: "", type: "modbus-client"}
         },
         inputs: 1,
         outputs: 2,
@@ -83,8 +83,10 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
     <div class="form-row">
         <label for="node-input-dataType"><i class="icon-list"></i> Type</label>
         <select id="node-input-dataType">
-            <option value="Coil">FC 5: Write Single Coil</option>
-            <option value="HoldingRegister">FC 6: Write Single Holding Register</option>
+            <option value="Coil">FC 5: Force Single Coil</option>
+            <option value="HoldingRegister">FC 6: Preset Single Register</option>
+            <option value="MCoils">FC 15: Force Multiple Coils</option>
+            <option value="MHoldingRegisters">FC 16: Preset Multiple Registers</option>
         </select>
     </div>
     <div class="form-row">
@@ -104,16 +106,29 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 
 
 <script type="text/x-red" data-help-name="modbus-write">
-    <p>Modbus TCP client node.  Connects to a Modbus TCP server to write <b>msg.payload</b> to a coil or register.
-    <h4>Function codes currently supported include:</h4>
+    <p>Modbus TCP client node.</p>
+    <p>Connects to a Modbus TCP slave to write <strong>msg.payload</strong> to a coil or register.</p>
+    <p>Input array will be a multiple write <strong>msg.payload</strong> to coils or registers.</p>
+    <p>
+        <h4>Function codes currently supported include:</h4>
+
         <ul>
-          <li>FC 5: Write Single Coil</li>
-          <li>FC 6: Write Single Holding Register</li>
+          <li>FC 5: Force Single Coil</li>
+          <li>FC 6: Preset Single Register</li>
+          <li>FC 15: Force Multiple Coils</li>
+          <li>FC 16: Preset Multiple Registers</li>
         </ul>
-     Choose a function code (FC) from the dropdown menu, select the coil/register start address (0:65535).  Choose or edit the Modbus TCP server configuration.
-     <br><br>
-    For FC 5, <b>msg.payload</b> must be a number or string value of 0 or 1.  For FC 6, <b>msg.payload</b> must be a number or string value between 0:65535.
-     </p>
+    </p>
+    <p>
+        Choose a function code (FC) from the dropdown menu,
+        select the coil/register start address (0:65535).
+        Choose or edit the Modbus TCP server configuration.
+    </p>
+
+    <p>
+        For FC 5, <strong>msg.payload</strong> must be a value of 1 or 0 or true or false.
+        For FC 6, <strong>msg.payload</strong> must be a value between 0:65535.
+    </p>
 
      <p>Output 1: given data Array</p>
      <p>Output 2: response from modbus</p>

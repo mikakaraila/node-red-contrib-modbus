@@ -5,7 +5,7 @@
   "dependencies": {
     "async": "^2.0.0-rc.3",
     "fs-extra": "^0.27.0",
-    "jsmodbus": "^0.5.0",
+    "jsmodbus": "^1.0.3",
     "line-by-line": "^0.1.4"
   },
   "repository": {
@@ -23,7 +23,7 @@
   ],
   "node-red": {
     "nodes": {
-      "Modbus-Server": "modbus/modbus-server.js",
+      "Modbus-Client": "modbus/modbus-client.js",
       "Modbus-Response": "modbus/modbus-response.js",
       "Modbus-Read": "modbus/modbus-read.js",
       "Modbus-Write": "modbus/modbus-write.js"

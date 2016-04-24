@@ -92,6 +92,13 @@ module.exports = function (RED) {
             }
         };
 
+        node.receiveEventErrorRead = function (err) {
+            if (node) {
+                set_node_status_to("error");
+                node.error(err);
+            }
+        };
+
         function connectModbusSlave() {
 
             async.series([
@@ -132,6 +139,7 @@ module.exports = function (RED) {
 
                             node.connection.on('close', node.receiveEventCloseRead);
                             node.connection.on('connect', node.receiveEventConnectRead);
+                            node.connection.on('error', node.receiveEventErrorRead);
                             callback();
 
                         } else {
@@ -151,7 +159,7 @@ module.exports = function (RED) {
                 function (err) {
                     if (err) {
                         node.connection = null;
-                        callback(err);
+                        node.error(err);
                     }
                 }
             );
@@ -164,45 +172,36 @@ module.exports = function (RED) {
             var msg = {};
             msg.topic = node.name;
 
-            if (node.connection &&
-                node.connection.isConnected()) {
+            if (node.connection) {
 
                 switch (node.dataType) {
                     case "Coil": //FC: 1
                         set_node_status_to("polling");
-                        node.connection.readCoils(node.adr, node.quantity, function (resp, err) {
-                            if (set_modbus_error(err) && resp) {
-                                set_node_status_to("active reading");
-                                node.send(build_message(resp.coils, resp));
-                            }
-                        });
+                        node.connection.readCoils(node.adr, node.quantity).then(function (resp) {
+                            set_node_status_to("active reading");
+                            node.send(build_message(resp.coils, resp));
+                        }).fail(set_modbus_error);
                         break;
                     case "Input": //FC: 2
                         set_node_status_to("polling");
-                        node.connection.readDiscreteInput(node.adr, node.quantity, function (resp, err) {
-                            if (set_modbus_error(err) && resp) {
-                                set_node_status_to("active reading");
-                                node.send(build_message(resp.coils, resp));
-                            }
-                        });
+                        node.connection.readDiscreteInputs(node.adr, node.quantity).then(function (resp) {
+                            set_node_status_to("active reading");
+                            node.send(build_message(resp.coils, resp));
+                        }).fail(set_modbus_error);
                         break;
                     case "HoldingRegister": //FC: 3
                         set_node_status_to("polling");
-                        node.connection.readHoldingRegister(node.adr, node.quantity, function (resp, err) {
-                            if (set_modbus_error(err) && resp) {
-                                set_node_status_to("active reading");
-                                node.send(build_message(resp.register, resp));
-                            }
-                        });
+                        node.connection.readHoldingRegisters(node.adr, node.quantity).then(function (resp) {
+                            set_node_status_to("active reading");
+                            node.send(build_message(resp.register, resp));
+                        }).fail(set_modbus_error);
                         break;
                     case "InputRegister": //FC: 4
                         set_node_status_to("polling");
-                        node.connection.readInputRegister(node.adr, node.quantity, function (resp, err) {
-                            if (set_modbus_error(err) && resp) {
-                                set_node_status_to("active reading");
-                                node.send(build_message(resp.register, resp));
-                            }
-                        });
+                        node.connection.readInputRegisters(node.adr, node.quantity).then(function (resp) {
+                            set_node_status_to("active reading");
+                            node.send(build_message(resp.register, resp));
+                        }).fail(set_modbus_error);
                         break;
                 }
             } else {
@@ -223,6 +222,7 @@ module.exports = function (RED) {
             set_node_status_to("closed");
             node.receiveEventCloseRead = null;
             node.receiveEventConnectRead = null;
+            node.receiveEventErrorRead = null;
             node.connection = null;
             node = null;
         });

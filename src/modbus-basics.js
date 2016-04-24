@@ -124,4 +124,4 @@ module.exports.set_node_status_properties = function (statusValue) {
     }
 
     return { fill: fillValue, shape: shapeValue, status: statusValue  };
-}
+};
