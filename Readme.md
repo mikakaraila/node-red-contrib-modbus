@@ -20,10 +20,13 @@ Run the following command for global install
 ![Flow Example](images/ScreenshotV042.png)
 
 # Author
+
 since 2015 [Mika Karaila][4]
+
 since 2016 [Klaus Landsdorf][5]
 
 # Co-Author disconnected branch
+
 since 2016 [Jason D. Harper][3]
 
 
