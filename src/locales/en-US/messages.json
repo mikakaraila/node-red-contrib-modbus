@@ -1,0 +1,43 @@
+{
+  "io": {
+    "read": {
+    },
+    "write": {
+    },
+    "config": {
+      "label": {
+        "file": "Filename"
+      }
+    }
+  },
+  "read": {
+  },
+  "write": {
+  },
+  "server": {
+  },
+  "modbustcp-io-config": {
+    "label": {
+    }
+  },
+  "modbustcp-io-read": {
+    "label": {
+    }
+  },
+  "modbustcp-io-write": {
+    "label": {
+    }
+  },
+  "modbustcp-server": {
+    "label": {
+    }
+  },
+  "modbustcp-read": {
+    "label": {
+    }
+  },
+  "modbustcp-write": {
+    "label": {
+    }
+  }
+}
