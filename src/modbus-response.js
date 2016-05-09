@@ -110,6 +110,18 @@ module.exports = function (RED) {
             } else {
                 set_node_status_to("active", msg.payload);
             }
+
+            if (msg.payload.hasOwnProperty('coils')
+                && msg.payload.coils.length > node.registerShowMax) {
+
+                node.status({
+                    fill: 'green',
+                    shape: 'dot',
+                    text: 'fc: ' + msg.payload.fc + ' byteCount: ' + msg.payload.byteCount + ' registerCount: ' + msg.payload.coils.length
+                });
+            } else {
+                set_node_status_to("active", msg.payload);
+            }
         });
 
         node.on("close", function () {
