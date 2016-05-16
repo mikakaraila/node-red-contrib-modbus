@@ -97,30 +97,45 @@ module.exports = function (RED) {
             node.status({fill: fillValue, shape: shapeValue, text: util.inspect(response, false, null)});
         }
 
+        function set_node_status_response(fc, byteCount, length) {
+            node.status({
+                fill: 'green',
+                shape: 'dot',
+                text: 'fc: ' + fc + ' byteCount: ' + byteCount + ' registerCount: ' + length
+            });
+        }
+
         node.on("input", function (msg) {
 
-            if (msg.payload.hasOwnProperty('register')
-                && msg.payload.register.length > node.registerShowMax) {
+            var inputType = 'default';
 
-                node.status({
-                    fill: 'green',
-                    shape: 'dot',
-                    text: 'fc: ' + msg.payload.fc + ' byteCount: ' + msg.payload.byteCount + ' registerCount: ' + msg.payload.register.length
-                });
-            } else {
-                set_node_status_to("active", msg.payload);
+            if (msg.payload.hasOwnProperty('register')) {
+                inputType = 'register';
             }
 
-            if (msg.payload.hasOwnProperty('coils')
-                && msg.payload.coils.length > node.registerShowMax) {
+            if (msg.payload.hasOwnProperty('coils')) {
+                inputType = 'coils';
+            }
 
-                node.status({
-                    fill: 'green',
-                    shape: 'dot',
-                    text: 'fc: ' + msg.payload.fc + ' byteCount: ' + msg.payload.byteCount + ' registerCount: ' + msg.payload.coils.length
-                });
-            } else {
-                set_node_status_to("active", msg.payload);
+            switch (inputType) {
+
+                case 'register':
+                    if (msg.payload.register.length > node.registerShowMax) {
+                        set_node_status_response(msg.payload.fc, msg.payload.byteCount, msg.payload.register.length)
+                    }
+                    else {
+                        set_node_status_to("active", msg.payload);
+                    }
+                    break;
+                case 'coils':
+                    if (msg.payload.coils.length > node.registerShowMax) {
+                        set_node_status_response(msg.payload.fc, msg.payload.byteCount, msg.payload.coils.length)
+                    } else {
+                        set_node_status_to("active", msg.payload);
+                    }
+                    break;
+                default:
+                    set_node_status_to("active", msg.payload);
             }
         });
 
