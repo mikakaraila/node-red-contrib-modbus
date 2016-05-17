@@ -246,7 +246,6 @@ module.exports = function (RED) {
             node.receiveEventConnectWrite = null;
             node.receiveEventErrorWrite = null;
             node.connection = null;
-            node = null;
         });
 
         function verbose_warn(logMessage) {
