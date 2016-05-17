@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-modbus",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "Node-RED original nodes to communicate via MODBUS TCP.",
   "dependencies": {
     "async": "^2.0.0-rc.3",

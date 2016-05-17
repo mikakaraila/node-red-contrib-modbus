@@ -72,13 +72,29 @@ module.exports = function (RED) {
         var modbusTCPServer = RED.nodes.getNode(config.server);
         var timerID = null;
         var retryTime = 15000; // 15 sec.
+        var closeCounter = 0;
 
         set_node_status_to("waiting");
 
         node.receiveEventCloseRead = function () {
             if (node) {
-                set_node_status_to("disconnected");
-                connectModbusSlave();
+
+                closeCounter = closeCounter + 1;
+
+                if (closeCounter > 100) {
+                    set_node_status_to("blocked by downloading?");
+                } else {
+                    set_node_status_to("disconnected");
+                }
+
+                if (timerID) {
+                    clearInterval(timerID); // clear Timer from events
+                }
+
+                timerID = setInterval(function () {
+                    verbose_log("receiveEventCloseRead -> connectModbusSlave");
+                    connectModbusSlave();
+                }, retryTime);
             }
         };
 
@@ -100,6 +116,8 @@ module.exports = function (RED) {
         };
 
         function connectModbusSlave() {
+
+            closeCounter = 0;
 
             async.series([
                     function (callback) {
@@ -145,6 +163,7 @@ module.exports = function (RED) {
                         } else {
 
                             timerID = setInterval(function () {
+                                verbose_log("setInterval in async -> connectModbusSlave");
                                 connectModbusSlave();
                             }, retryTime);
 
@@ -165,6 +184,7 @@ module.exports = function (RED) {
             );
         }
 
+        verbose_log("init call connectModbusSlave");
         connectModbusSlave();
 
         function ModbusMasterRead() {
@@ -210,6 +230,7 @@ module.exports = function (RED) {
                 clearInterval(timerID); // remove ModbusMasterRead
 
                 timerID = setInterval(function () {
+                    verbose_log("setInterval in ModbusMasterRead -> connectModbusSlave");
                     connectModbusSlave();
                 }, retryTime);
             }
@@ -217,6 +238,7 @@ module.exports = function (RED) {
 
         node.on("close", function () {
 
+            closeCounter = 0;
             verbose_warn("read close");
             clearInterval(timerID);
             set_node_status_to("closed");
