@@ -82,6 +82,7 @@ module.exports = function (RED) {
 
                 if (closeCounter > 100) {
                     set_node_status_to("blocked by downloading?");
+                    closeCounter = 100;
                 } else {
                     set_node_status_to("disconnected");
                 }
