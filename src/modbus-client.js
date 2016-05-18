@@ -72,24 +72,24 @@ module.exports = function (RED) {
 
         function verbose_warn(logMessage) {
             if (RED.settings.verbose) {
-                node.warn('Client -> ' + logMessage + ' at ' + serverInfo);
+                node.warn('Client -> ' + logMessage + serverInfo);
             }
         }
 
         function verbose_log(logMessage) {
             if (RED.settings.verbose) {
-                node.log('Client -> ' + logMessage + ' at ' + serverInfo);
+                node.log('Client -> ' + logMessage + serverInfo);
             }
         }
 
         node.initializeModbusTCPConnection = function (handler) {
 
-            if (node.client) {
+            if (node.client && connections > 0) {
                 verbose_log(connections + ' Connections connected to modbus slave');
                 handler(node.client);
             }
             else {
-                verbose_log('Connecting to modbus slave');
+                verbose_log('Connecting to modbus slave with ' + connections + ' connections');
 
                 node.client = null;
                 try {
@@ -116,7 +116,7 @@ module.exports = function (RED) {
             verbose_warn("Client close");
             verbose_log('disconnecting from modbus slave');
 
-            if (node.client) {
+            if (node.client && connections > 0) {
                 node.client.close();
                 node.client = null;
                 verbose_warn("Client closed " + connections--);

@@ -73,13 +73,15 @@ module.exports = function (RED) {
         var timerID = null;
         var retryTime = 15000; // 15 sec.
         var closeCounter = 0;
+        var connectionInitDone = false;
 
         set_node_status_to("waiting");
 
         node.receiveEventCloseRead = function () {
-            if (node) {
+            if (node && connectionInitDone) {
 
                 closeCounter = closeCounter + 1;
+                verbose_log("receiveEventCloseRead -> connectModbusSlave : closeCounter" + closeCounter);
 
                 if (closeCounter > 100) {
                     set_node_status_to("blocked by downloading?");
@@ -92,15 +94,18 @@ module.exports = function (RED) {
                 }
 
                 timerID = setInterval(function () {
-                    verbose_log("receiveEventCloseRead -> connectModbusSlave");
                     connectModbusSlave();
                 }, retryTime);
             }
         };
 
         node.receiveEventConnectRead = function () {
-            if (node) {
+            if (node && connectionInitDone) {
                 set_node_status_to("connected");
+
+                if (timerID) {
+                    clearInterval(timerID); // clear Timer from events
+                }
 
                 timerID = setInterval(function () {
                     ModbusMasterRead();
@@ -186,6 +191,7 @@ module.exports = function (RED) {
 
         verbose_log("init call connectModbusSlave");
         connectModbusSlave();
+        connectionInitDone = true;
 
         function ModbusMasterRead() {
 
@@ -238,6 +244,7 @@ module.exports = function (RED) {
 
         node.on("close", function () {
 
+            connectionInitDone = false;
             closeCounter = 0;
             verbose_warn("read close");
             clearInterval(timerID);
@@ -246,6 +253,7 @@ module.exports = function (RED) {
             node.receiveEventConnectRead = null;
             node.receiveEventErrorRead = null;
             node.connection = null;
+
         });
 
         function verbose_warn(logMessage) {
