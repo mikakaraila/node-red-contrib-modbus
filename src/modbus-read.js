@@ -80,8 +80,7 @@ module.exports = function (RED) {
         node.receiveEventCloseRead = function () {
             if (node && connectionInitDone) {
 
-                closeCounter = closeCounter + 1;
-                verbose_log("receiveEventCloseRead -> connectModbusSlave : closeCounter" + closeCounter);
+                closeCounter++;
 
                 if (closeCounter > 100) {
                     set_node_status_to("blocked by downloading?");
@@ -94,13 +93,17 @@ module.exports = function (RED) {
                 }
 
                 timerID = setInterval(function () {
-                    connectModbusSlave();
+                    closeCounter = 0;
+                    // auto reconnect from client
                 }, retryTime);
             }
         };
 
         node.receiveEventConnectRead = function () {
             if (node && connectionInitDone) {
+
+                closeCounter = 0;
+
                 set_node_status_to("connected");
 
                 if (timerID) {

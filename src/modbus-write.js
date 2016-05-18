@@ -70,19 +70,43 @@ module.exports = function (RED) {
         var modbusTCPServer = RED.nodes.getNode(config.server);
         var timerID = null;
         var retryTime = 15000; // 15 sec.
+        var closeCounter = 0;
+        var connectionInitDone = false;
 
         set_node_status_to("waiting");
 
         node.receiveEventCloseWrite = function () {
-            if (node) {
-                set_node_status_to("disconnected");
-                connectModbusSlave();
+            if (node && connectionInitDone) {
+
+                closeCounter++;
+
+                if (closeCounter > 100) {
+                    set_node_status_to("blocked by downloading?");
+                } else {
+                    set_node_status_to("disconnected");
+                }
+
+                if (timerID) {
+                    clearInterval(timerID); // clear Timer from events
+                }
+
+                timerID = setInterval(function () {
+                    closeCounter = 0;
+                    // auto reconnect from client
+                }, retryTime);
             }
         };
 
         node.receiveEventConnectWrite = function () {
-            if (node) {
+            if (node && connectionInitDone) {
+
+                closeCounter = 0;
+
                 set_node_status_to("connected");
+
+                if (timerID) {
+                    clearInterval(timerID); // clear Timer from events
+                }
 
                 timerID = setInterval(function () {
                     check_connection();
@@ -176,6 +200,7 @@ module.exports = function (RED) {
         }
 
         connectModbusSlave();
+        connectionInitDone = true;
 
         node.on("input", function (msg) {
 
@@ -242,6 +267,8 @@ module.exports = function (RED) {
 
             verbose_warn("write close");
             set_node_status_to("closed");
+
+            connectionInitDone = false;
             node.receiveEventCloseWrite = null;
             node.receiveEventConnectWrite = null;
             node.receiveEventErrorWrite = null;
