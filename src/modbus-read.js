@@ -78,7 +78,8 @@ module.exports = function (RED) {
         set_node_status_to("waiting");
 
         node.receiveEventCloseRead = function () {
-            if (node && connectionInitDone) {
+
+            if (connectionInitDone) {
 
                 closeCounter++;
 
@@ -101,7 +102,8 @@ module.exports = function (RED) {
         };
 
         node.receiveEventConnectRead = function () {
-            if (node && connectionInitDone) {
+
+            if (connectionInitDone) {
 
                 closeCounter = 0;
 
@@ -118,10 +120,9 @@ module.exports = function (RED) {
         };
 
         node.receiveEventErrorRead = function (err) {
-            if (node) {
-                set_node_status_to("error");
-                node.error(err);
-            }
+            
+            set_node_status_to("error");
+            node.error(err);
         };
 
         function connectModbusSlave() {

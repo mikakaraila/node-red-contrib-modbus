@@ -76,7 +76,8 @@ module.exports = function (RED) {
         set_node_status_to("waiting");
 
         node.receiveEventCloseWrite = function () {
-            if (node && connectionInitDone) {
+            
+            if (connectionInitDone) {
 
                 closeCounter++;
 
@@ -99,40 +100,18 @@ module.exports = function (RED) {
         };
 
         node.receiveEventConnectWrite = function () {
-            if (node && connectionInitDone) {
 
+            if (connectionInitDone) {
                 closeCounter = 0;
-
                 set_node_status_to("connected");
-
-                if (timerID) {
-                    clearInterval(timerID); // clear Timer from events
-                }
-
-                timerID = setInterval(function () {
-                    check_connection();
-                }, retryTime);
             }
         };
 
         node.receiveEventErrorWrite = function (err) {
-            if (node) {
-                set_node_status_to("error");
-                node.error(err);
-            }
-        };
 
-        function check_connection() {
-            if (node) {
-                if (!node.connection) {
-                    set_node_status_to("disconnected");
-                    clearInterval(timerID); // clear Timer from events
-                    connectModbusSlave();
-                }
-            } else {
-                clearInterval(timerID); // clear Timer from events
-            }
-        }
+            set_node_status_to("error");
+            node.error(err);
+        };
 
         function connectModbusSlave() {
 
