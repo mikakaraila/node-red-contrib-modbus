@@ -70,44 +70,48 @@ module.exports = function (RED) {
         var modbusTCPServer = RED.nodes.getNode(config.server);
         var timerID = null;
         var retryTime = 15000; // 15 sec.
+        var closeCounter = 0;
+        var connectionInitDone = false;
 
         set_node_status_to("waiting");
 
         node.receiveEventCloseWrite = function () {
-            if (node) {
-                set_node_status_to("disconnected");
-                connectModbusSlave();
-            }
-        };
+            
+            if (connectionInitDone) {
 
-        node.receiveEventConnectWrite = function () {
-            if (node) {
-                set_node_status_to("connected");
+                closeCounter++;
+
+                if (closeCounter > 100) {
+                    set_node_status_to("blocked by downloading?");
+                    closeCounter = 100;
+                } else {
+                    set_node_status_to("disconnected");
+                }
+
+                if (timerID) {
+                    clearInterval(timerID); // clear Timer from events
+                }
 
                 timerID = setInterval(function () {
-                    check_connection();
+                    closeCounter = 0;
+                    // auto reconnect from client
                 }, retryTime);
             }
         };
 
-        node.receiveEventErrorWrite = function (err) {
-            if (node) {
-                set_node_status_to("error");
-                node.error(err);
+        node.receiveEventConnectWrite = function () {
+
+            if (connectionInitDone) {
+                closeCounter = 0;
+                set_node_status_to("connected");
             }
         };
 
-        function check_connection() {
-            if (node) {
-                if (!node.connection) {
-                    set_node_status_to("disconnected");
-                    clearInterval(timerID); // clear Timer from events
-                    connectModbusSlave();
-                }
-            } else {
-                clearInterval(timerID); // clear Timer from events
-            }
-        }
+        node.receiveEventErrorWrite = function (err) {
+
+            set_node_status_to("error");
+            node.error(err);
+        };
 
         function connectModbusSlave() {
 
@@ -176,6 +180,7 @@ module.exports = function (RED) {
         }
 
         connectModbusSlave();
+        connectionInitDone = true;
 
         node.on("input", function (msg) {
 
@@ -242,11 +247,12 @@ module.exports = function (RED) {
 
             verbose_warn("write close");
             set_node_status_to("closed");
+
+            connectionInitDone = false;
             node.receiveEventCloseWrite = null;
             node.receiveEventConnectWrite = null;
             node.receiveEventErrorWrite = null;
             node.connection = null;
-            node = null;
         });
 
         function verbose_warn(logMessage) {

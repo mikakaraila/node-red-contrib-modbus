@@ -1,6 +1,7 @@
 .git
 .idea
 test
+extras
 examples
 node_modules
 .gitignore

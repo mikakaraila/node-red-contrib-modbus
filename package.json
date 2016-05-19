@@ -1,7 +1,7 @@
 {
   "name": "node-red-contrib-modbus",
-  "version": "0.4.2",
-  "description": "Node-RED nodes for configure and communicating via MODBUS TCP.",
+  "version": "0.4.7",
+  "description": "Node-RED original nodes to communicate via MODBUS TCP.",
   "dependencies": {
     "async": "^2.0.0-rc.3",
     "fs-extra": "^0.27.0",
