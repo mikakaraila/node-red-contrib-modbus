@@ -31,46 +31,22 @@
 
  **/
 
+/* see http://mochajs.org/ */
 
-describe("jasmine.arrayContaining", function () {
-    var foo;
+var assert = require('chai').assert;
 
-    beforeEach(function () {
-        foo = [1, 2, 3, 4];
-    });
-
-    it("matches arrays with some of the values", function () {
-        expect(foo).toEqual(jasmine.arrayContaining([3, 1]));
-        expect(foo).not.toEqual(jasmine.arrayContaining([6]));
-    });
-
-    describe("when used with a spy", function () {
-        it("is useful when comparing arguments", function () {
-            var callback = jasmine.createSpy('callback');
-
-            callback([1, 2, 3, 4]);
-
-            expect(callback).toHaveBeenCalledWith(jasmine.arrayContaining([4, 2, 3]));
-            expect(callback).not.toHaveBeenCalledWith(jasmine.arrayContaining([5, 2]));
+describe('Array', function () {
+    describe('#indexOf()', function () {
+        it('should return -1 when the value is not present', function () {
+            assert.equal(-1, [1, 2, 3].indexOf(5));
+            assert.equal(-1, [1, 2, 3].indexOf(0));
+            assert.equal(1, [1, 2, 3].indexOf(2));
         });
-    });
-});
 
-
-describe("jasmine.any", function () {
-    it("matches any value", function () {
-        expect({}).toEqual(jasmine.any(Object));
-        expect(12).toEqual(jasmine.any(Number));
-    });
-
-    describe("when used with a spy", function () {
-        it("is useful for comparing arguments", function () {
-            var foo = jasmine.createSpy('foo');
-            foo(12, function () {
-                return true;
-            });
-
-            expect(foo).toHaveBeenCalledWith(jasmine.any(Number), jasmine.any(Function));
+        it('should return index when the value is present', function () {
+            assert.equal(0, [1, 2, 3].indexOf(1));
+            assert.equal(1, [1, 2, 3].indexOf(2));
+            assert.equal(2, [1, 2, 3].indexOf(3));
         });
     });
 });
