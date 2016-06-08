@@ -202,6 +202,7 @@ module.exports = function (RED) {
                         node.connection.readCoils(node.adr, node.quantity).then(function (resp) {
                             set_node_status_to("active reading");
                             node.send(build_message(resp.coils, resp, msg));
+                            set_node_status_to("connected");
                         }).fail(set_modbus_error);
                         break;
                     case "Input": //FC: 2
@@ -209,6 +210,7 @@ module.exports = function (RED) {
                         node.connection.readDiscreteInputs(node.adr, node.quantity).then(function (resp) {
                             set_node_status_to("active reading");
                             node.send(build_message(resp.coils, resp, msg));
+                            set_node_status_to("connected");
                         }).fail(set_modbus_error);
                         break;
                     case "HoldingRegister": //FC: 3
@@ -216,6 +218,7 @@ module.exports = function (RED) {
                         node.connection.readHoldingRegisters(node.adr, node.quantity).then(function (resp) {
                             set_node_status_to("active reading");
                             node.send(build_message(resp.register, resp, msg));
+                            set_node_status_to("connected");
                         }).fail(set_modbus_error);
                         break;
                     case "InputRegister": //FC: 4
@@ -223,6 +226,7 @@ module.exports = function (RED) {
                         node.connection.readInputRegisters(node.adr, node.quantity).then(function (resp) {
                             set_node_status_to("active reading");
                             node.send(build_message(resp.register, resp, msg));
+                            set_node_status_to("connected");
                         }).fail(set_modbus_error);
                         break;
                 }
