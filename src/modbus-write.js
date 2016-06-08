@@ -202,9 +202,9 @@ module.exports = function (RED) {
                 switch (node.dataType) {
                     case "MCoils": //FC: 15
                         verbose_log('write payload length: ' + msg.payload.length);
-
-                        if (msg.payload.length !== Number(node.quantity)) {
-                            node.error("Quantity should be less or equal to coil payload array Addr: " + node.adr + " Q: " + node.quantity);
+                        verbose_warn('array ' + typeof msg.payload + ' ' + msg.payload);
+                        if (Number(msg.payload.length) !== Number(node.quantity)) {
+                            node.error("Quantity should be less or equal to coil payload array length: " + msg.payload.length + " Addr: " + node.adr + " Q: " + node.quantity);
                         } else {
                             node.connection.writeMultipleCoils(Number(node.adr), msg.payload).then(function (resp) {
                                 set_node_status_to("active writing");
@@ -220,9 +220,9 @@ module.exports = function (RED) {
                         break;
                     case "MHoldingRegisters": //FC: 16
                         verbose_log('write payload length: ' + msg.payload.length);
-
-                        if (msg.payload.length !== Number(node.quantity)) {
-                            node.error("Quantity should be less or equal to register payload array Addr: " + node.adr + " Q: " + node.quantity);
+                        verbose_warn('array ' + typeof msg.payload + ' ' + msg.payload);
+                        if (Number(msg.payload.length) !== Number(node.quantity)) {
+                            node.error("Quantity should be less or equal to register payload array length: " + msg.payload.length + " Addr: " + node.adr + " Q: " + node.quantity);
                         } else {
                             node.connection.writeMultipleRegisters(Number(node.adr), msg.payload).then(function (resp) {
                                 set_node_status_to("active writing");

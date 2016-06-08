@@ -94,19 +94,22 @@ describe('Read node Testing', function () {
 
     describe('Node', function () {
 
-        /*
-         it('simple Node should be loaded', function (done) {
 
+        it('simple Node should be loaded', function (done) {
 
-         helper.load([nodeUnderTestClient, nodeUnderTest], simpleNodeFlow, function () {
+            var flow = [{id: "n1", type: "modbus-read", name: "modbusRead"}];
 
-         var modbusNode = helper.getNode("n1");
-         modbusNode.should.have.property('name', 'modbusWrite');
+            helper.load(nodeUnderTest, flow, function () {
 
-         done();
-         });
-         });
-         */
+                var modbusNode = helper.getNode("n1");
+                modbusNode.should.have.property('name', 'modbusRead');
+
+                done();
+            }, function () {
+                helper.log("function callback");
+            });
+        });
+
 
         /*
          it('should be loaded', function (done) {
