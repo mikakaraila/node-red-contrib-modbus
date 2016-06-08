@@ -17,7 +17,7 @@ Run the following command for global install
 
 # How to use
 
-![Flow Example](images/Screenshot01V050.png)
+![Flow Example](images/Screenshot01V051.png)
 
 # Author
 

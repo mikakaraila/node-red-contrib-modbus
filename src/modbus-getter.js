@@ -282,12 +282,8 @@ module.exports = function (RED) {
             node.status({
                 fill: statusOptions.fill,
                 shape: statusOptions.shape,
-                text: statusOptions.status + get_timeInfo()
+                text: statusOptions.status
             });
-        }
-
-        function get_timeInfo() {
-            return ' ( ' + node.rate + ' ' + mbBasics.get_timeUnit_name(node.rateUnit) + ' )';
         }
 
         function set_modbus_error(err) {
