@@ -50,21 +50,21 @@
  @author <a href="mailto:klaus.landsdorf@bianco-royal.de">Klaus Landsdorf</a> (Bianco Royal)
 
  **/
-
 module.exports = function (RED) {
     "use strict";
     var async = require("async");
     var util = require('util');
     var mbBasics = require('./modbus-basics');
 
-    function ModbusWrite(config) {
+    function ModbusGetter(config) {
 
         RED.nodes.createNode(this, config);
 
         this.name = config.name;
         this.dataType = config.dataType;
-        this.adr = Number(config.adr);
+        this.adr = config.adr;
         this.quantity = config.quantity;
+        this.connection = null;
 
         var node = this;
         var modbusTCPServer = RED.nodes.getNode(config.server);
@@ -75,8 +75,8 @@ module.exports = function (RED) {
 
         set_node_status_to("waiting");
 
-        node.receiveEventCloseWrite = function () {
-            
+        node.receiveEventCloseRead = function () {
+
             if (connectionInitDone) {
 
                 closeCounter++;
@@ -99,21 +99,29 @@ module.exports = function (RED) {
             }
         };
 
-        node.receiveEventConnectWrite = function () {
+        node.receiveEventConnectRead = function () {
 
             if (connectionInitDone) {
+
                 closeCounter = 0;
+
                 set_node_status_to("connected");
+
+                if (timerID) {
+                    clearInterval(timerID); // clear Timer from events
+                }
             }
         };
 
-        node.receiveEventErrorWrite = function (err) {
+        node.receiveEventErrorRead = function (err) {
 
             set_node_status_to("error");
             node.error(err);
         };
 
         function connectModbusSlave() {
+
+            closeCounter = 0;
 
             async.series([
                     function (callback) {
@@ -151,14 +159,15 @@ module.exports = function (RED) {
 
                         if (node.connection) {
 
-                            node.connection.on('close', node.receiveEventCloseWrite);
-                            node.connection.on('error', node.receiveEventErrorWrite);
-                            node.connection.on('connect', node.receiveEventConnectWrite);
+                            node.connection.on('close', node.receiveEventCloseRead);
+                            node.connection.on('connect', node.receiveEventConnectRead);
+                            node.connection.on('error', node.receiveEventErrorRead);
                             callback();
 
                         } else {
 
                             timerID = setInterval(function () {
+                                verbose_log("setInterval in async -> connectModbusSlave");
                                 connectModbusSlave();
                             }, retryTime);
 
@@ -166,7 +175,7 @@ module.exports = function (RED) {
                         }
                     },
                     function (callback) {
-                        verbose_warn('connection write async done');
+                        verbose_warn('connection read async done');
                         callback();
                     }
                 ],
@@ -179,85 +188,79 @@ module.exports = function (RED) {
             );
         }
 
+        verbose_log("init call connectModbusSlave");
         connectModbusSlave();
         connectionInitDone = true;
 
         node.on("input", function (msg) {
 
-                if (!(msg && msg.hasOwnProperty('payload'))) return;
-
-                if (msg.payload == null) {
-                    set_node_status_to("payload error");
-                    node.error('ModbusTCPWrite: Invalid msg.payload!');
-                    return;
-                }
-
-                node.status(null);
-
-            if (!node.connection) {
-                    set_node_status_to("waiting");
-                    return;
-                }
+            if (node.connection) {
 
                 switch (node.dataType) {
-                    case "MCoils": //FC: 15
-                        verbose_log('write payload length: ' + msg.payload.length);
-                        verbose_warn('array ' + typeof msg.payload + ' ' + msg.payload);
-                        if (Number(msg.payload.length) !== Number(node.quantity)) {
-                            node.error("Quantity should be less or equal to coil payload array length: " + msg.payload.length + " Addr: " + node.adr + " Q: " + node.quantity);
-                        } else {
-                            node.connection.writeMultipleCoils(Number(node.adr), msg.payload).then(function (resp) {
-                                set_node_status_to("active writing");
-                                node.send(build_message(msg.payload, resp));
-                            }).fail(set_modbus_error);
-                        }
-                        break;
-                    case "Coil": //FC: 5
-                        node.connection.writeSingleCoil(Number(node.adr), (msg.payload == true)).then(function (resp) {
-                            set_node_status_to("active writing");
-                            node.send(build_message(msg.payload, resp));
+                    case "Coil": //FC: 1
+                        set_node_status_to("polling");
+                        node.connection.readCoils(node.adr, node.quantity).then(function (resp) {
+                            set_node_status_to("active reading");
+                            node.send(build_message(resp.coils, resp, msg));
+                            set_node_status_to("connected");
                         }).fail(set_modbus_error);
                         break;
-                    case "MHoldingRegisters": //FC: 16
-                        verbose_log('write payload length: ' + msg.payload.length);
-                        verbose_warn('array ' + typeof msg.payload + ' ' + msg.payload);
-                        if (Number(msg.payload.length) !== Number(node.quantity)) {
-                            node.error("Quantity should be less or equal to register payload array length: " + msg.payload.length + " Addr: " + node.adr + " Q: " + node.quantity);
-                        } else {
-                            node.connection.writeMultipleRegisters(Number(node.adr), msg.payload).then(function (resp) {
-                                set_node_status_to("active writing");
-                                node.send(build_message(msg.payload, resp));
-                            }).fail(set_modbus_error);
-                        }
-                        break;
-                    case "HoldingRegister": //FC: 6
-                        node.connection.writeSingleRegister(Number(node.adr), Number(msg.payload)).then(function (resp) {
-                            set_node_status_to("active writing");
-                            node.send(build_message(Number(msg.payload), resp));
+                    case "Input": //FC: 2
+                        set_node_status_to("polling");
+                        node.connection.readDiscreteInputs(node.adr, node.quantity).then(function (resp) {
+                            set_node_status_to("active reading");
+                            node.send(build_message(resp.coils, resp, msg));
+                            set_node_status_to("connected");
                         }).fail(set_modbus_error);
                         break;
-
-                    default:
+                    case "HoldingRegister": //FC: 3
+                        set_node_status_to("polling");
+                        node.connection.readHoldingRegisters(node.adr, node.quantity).then(function (resp) {
+                            set_node_status_to("active reading");
+                            node.send(build_message(resp.register, resp, msg));
+                            set_node_status_to("connected");
+                        }).fail(set_modbus_error);
+                        break;
+                    case "InputRegister": //FC: 4
+                        set_node_status_to("polling");
+                        node.connection.readInputRegisters(node.adr, node.quantity).then(function (resp) {
+                            set_node_status_to("active reading");
+                            node.send(build_message(resp.register, resp, msg));
+                            set_node_status_to("connected");
+                        }).fail(set_modbus_error);
                         break;
                 }
+            } else {
+                verbose_log('connection not ready - retry in ' + retryTime + ' seconds');
+
+                if (timerID) {
+                    clearInterval(timerID);
+                }
+
+                timerID = setInterval(function () {
+                    verbose_log("setInterval in ModbusGetter -> connectModbusSlave");
+                    connectModbusSlave();
+                }, retryTime);
             }
-        );
+        });
 
         node.on("close", function () {
 
-            verbose_warn("write close");
-            set_node_status_to("closed");
-
             connectionInitDone = false;
-            node.receiveEventCloseWrite = null;
-            node.receiveEventConnectWrite = null;
-            node.receiveEventErrorWrite = null;
+            closeCounter = 0;
+            verbose_warn("read close");
+            clearInterval(timerID);
+            set_node_status_to("closed");
+            node.receiveEventCloseRead = null;
+            node.receiveEventConnectRead = null;
+            node.receiveEventErrorRead = null;
             node.connection = null;
+
         });
 
         function verbose_warn(logMessage) {
             if (RED.settings.verbose) {
-                node.warn((node.name) ? node.name + ': ' + logMessage : 'ModbusWrite: ' + logMessage);
+                node.warn((node.name) ? node.name + ': ' + logMessage : 'Modbus Getter: ' + logMessage);
             }
         }
 
@@ -267,9 +270,8 @@ module.exports = function (RED) {
             }
         }
 
-        function build_message(values, response) {
-            set_node_status_to("connected");
-            return [{payload: values}, {payload: response}]
+        function build_message(values, response, msg) {
+            return [{payload: values}, {payload: response}, msg];
         }
 
         function set_node_status_to(statusValue) {
@@ -288,12 +290,12 @@ module.exports = function (RED) {
             if (err) {
                 set_node_status_to("error");
                 verbose_log(err);
-                node.error('Modbus Write client: ' + JSON.stringify(err));
+                node.error('Modbus Getter client: ' + JSON.stringify(err));
                 return false;
             }
             return true;
         }
     }
 
-    RED.nodes.registerType("modbus-write", ModbusWrite);
+    RED.nodes.registerType("modbus-getter", ModbusGetter);
 };

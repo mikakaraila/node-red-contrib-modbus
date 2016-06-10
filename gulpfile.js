@@ -34,7 +34,6 @@
 'use strict';
 
 var gulp = require('gulp');
-var uglify = require('gulp-uglify');
 var htmlmin = require('gulp-htmlmin');
 
 gulp.task('default', function () {
@@ -62,12 +61,6 @@ gulp.task('minify', function () {
             processScripts:["text/x-red"], quoteCharacter: "'"
         }))
         .pipe(gulp.dest('modbus'))
-});
-
-gulp.task('uglify', function () {
-    return gulp.src('src/*.js')
-        .pipe(uglify())
-        .pipe(gulp.dest('modbus'));
 });
 
 gulp.task('nodejs', function () {

@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-modbus",
-  "version": "0.4.7",
+  "version": "0.5.1",
   "description": "Node-RED original nodes to communicate via MODBUS TCP.",
   "dependencies": {
     "async": "^2.0.0-rc.3",
@@ -19,14 +19,16 @@
     "modbus tcp",
     "modbustcp",
     "modbus read",
-    "modbus write"
+    "modbus write",
+    "modbus getter"
   ],
   "node-red": {
     "nodes": {
       "Modbus-Client": "modbus/modbus-client.js",
       "Modbus-Response": "modbus/modbus-response.js",
       "Modbus-Read": "modbus/modbus-read.js",
-      "Modbus-Write": "modbus/modbus-write.js"
+      "Modbus-Write": "modbus/modbus-write.js",
+      "Modbus-Getter": "modbus/modbus-getter.js"
     }
   },
   "author": "Klaus Landsdorf",
@@ -40,13 +42,23 @@
   },
   "homepage": "https://github.com/biancode/node-red-contrib-modbus#readme",
   "scripts": {
-    "test": "karma start modbus.conf.js --log-level debug --single-run",
+    "test": "mocha test",
     "build": "gulp publish",
     "prepublish": "npm run build"
   },
   "devDependencies": {
+    "chai": "^3.5.0",
+    "express": "^4.13.4",
     "gulp": "^3.9.1",
     "gulp-htmlmin": "^1.3.0",
-    "gulp-uglify": "^1.5.3"
+    "gulp-uglify": "^1.5.3",
+    "jasmine-node": "^1.14.5",
+    "mocha": "^2.4.5",
+    "nock": "^8.0.0",
+    "node-red": "^0.13.4",
+    "should": "^8.3.2",
+    "sinon": "^1.17.4",
+    "supertest": "^1.2.0",
+    "when": "^3.7.7"
   }
 }
