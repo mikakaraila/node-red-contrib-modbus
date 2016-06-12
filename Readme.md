@@ -1,3 +1,8 @@
+[![NPM download](https://img.shields.io/npm/dm/node-red-contrib-modbus.svg)](http://www.npm-stats.com/~packages/node-red-contrib-modbus)
+[![NPM version](https://badge.fury.io/js/node-red-contrib-modbus.png)](http://badge.fury.io/js/node-red-contrib-modbus)
+
+![Node-RED Modbus](http://b.repl.ca/v1/Node--RED-Modbus-green.png)
+
 node-red-contrib-modbus
 ========================
 
